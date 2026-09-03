@@ -59,3 +59,16 @@
 - O botão do destaque agora adiciona diretamente o Combo Big Tasty ao pedido.
 - Destacado o cartão do produto no cardápio.
 - Atualizado o cache do aplicativo para a versão 10.
+
+## 3 de setembro de 2026, quinta atualização
+
+### Impressão direta pelo RawBT
+
+- Analisada a fotografia da impressão física enviada pelo cliente.
+- Identificado que o RawBT recortava a página HTML, removendo toda a faixa direita da comanda.
+- Substituída no Android a impressão da página pela integração direta `rawbt:base64`.
+- A comanda agora é enviada como comandos ESC POS, respeitando as 32 colunas físicas da impressora de 58 mm.
+- Mantidos número do pedido, data, cliente, telefone, itens, observações, valores, endereço, pagamento e campo de conferência.
+- Aplicados alinhamento, negrito e destaque do número do pedido diretamente pela impressora.
+- Mantida a impressão HTML apenas como contingência para computadores.
+- Atualizado o cache do aplicativo para a versão 11.

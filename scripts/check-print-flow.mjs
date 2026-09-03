@@ -19,6 +19,15 @@ assert.doesNotMatch(admin, /afterprint/, 'A comanda não pode ser removida antes
 assert.doesNotMatch(admin, /setTimeout\([\s\S]{0,180}window\.print/, 'A chamada de impressão não pode ser adiada no celular.')
 assert.match(admin, /document\.body\.append\(nextSheet\)/, 'A comanda deve ser anexada diretamente ao corpo da página.')
 
+assert.match(admin, /const RAWBT_COLUMNS = 32/, 'A impressÃ£o direta deve respeitar as 32 colunas da bobina de 58 mm.')
+assert.match(admin, /rawbt:base64,\$\{base64\}/, 'O painel deve enviar comandos ESC POS diretamente ao RawBT.')
+assert.match(admin, /command\(0x1b, 0x40\)/, 'A comanda deve inicializar a impressora antes de enviar o conteÃºdo.')
+assert.match(admin, /pair\('TOTAL', rawMoney\(order\.total\)\)/, 'O total deve ser formatado dentro da largura real da impressora.')
+
+const rawBtIndex = admin.indexOf("if (/Android/i.test(navigator.userAgent))")
+const htmlFallbackIndex = admin.indexOf("document.createElement('template')", rawBtIndex)
+assert.ok(rawBtIndex >= 0 && htmlFallbackIndex > rawBtIndex, 'No Android, o RawBT deve ser usado antes da impressÃ£o HTML de contingÃªncia.')
+
 const printingClassIndex = admin.indexOf("document.body.classList.add('printing')")
 const printCallIndex = admin.indexOf('window.print()', printingClassIndex)
 assert.ok(printingClassIndex >= 0 && printCallIndex > printingClassIndex, 'A comanda precisa estar pronta antes da impressão direta.')

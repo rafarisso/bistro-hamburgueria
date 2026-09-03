@@ -56,6 +56,149 @@ const printArea = order => {
   return `<section id="thermal-print">${printLogo()}<div class="print-kitchen-label">COMANDA DE PEDIDO</div><div class="print-order"><span>PEDIDO</span><b>#${escapeHtml(order.number)}</b><time>${formatDateTime(order.createdAt)}</time></div><div class="print-customer"><b>CLIENTE</b><span>${escapeHtml(order.customer.name)}</span><span>${escapeHtml(order.customer.phone)}</span></div><div class="print-section-title">ITENS DO PEDIDO</div><ul>${orderItems(order)}</ul>${order.orderNote ? `<p class="print-note"><b>ATENÇÃO, OBSERVAÇÃO</b><span>${escapeHtml(order.orderNote)}</span></p>` : ''}<div class="print-totals"><span>Subtotal <b>${money(order.subtotal)}</b></span>${order.deliveryFee ? `<span>Entrega <b>${money(order.deliveryFee)}</b></span>` : ''}<strong><span>TOTAL</span><b>${money(order.total)}</b></strong></div><div class="print-delivery"><b>${order.fulfillment === 'delivery' ? 'ENTREGA' : 'RETIRADA'}</b>${deliveryAddress}</div><div class="print-payment"><b>PAGAMENTO: ${paymentLabels[order.payment.method].toUpperCase()}</b>${order.payment.method === 'cash' ? `<span>Receber: ${order.payment.noChange ? 'valor exato' : money(order.payment.cashAmount)}</span><span>Troco: ${money(order.payment.change)}</span>` : ''}${['credit','debit'].includes(order.payment.method) ? '<strong>LEVAR MAQUININHA</strong>' : ''}${order.payment.method === 'pix' ? '<strong>CONFIRMAR COMPROVANTE</strong>' : ''}</div><footer>Conferido por: __________________</footer></section>`
 }
 
+const RAWBT_COLUMNS = 32
+const rawText = value => String(value ?? '')
+  .normalize('NFD')
+  .replace(/\p{Diacritic}/gu, '')
+  .replace(/[^\x20-\x7E]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+
+const rawMoney = value => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+
+const wrapRawText = (value, width = RAWBT_COLUMNS) => {
+  const words = rawText(value).split(' ').filter(Boolean)
+  if (!words.length) return ['']
+  const lines = []
+  let current = ''
+  for (const originalWord of words) {
+    let word = originalWord
+    while (word.length > width) {
+      if (current) { lines.push(current); current = '' }
+      lines.push(word.slice(0, width))
+      word = word.slice(width)
+    }
+    if (!word) continue
+    if (!current) current = word
+    else if (`${current} ${word}`.length <= width) current += ` ${word}`
+    else { lines.push(current); current = word }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
+const rawPair = (left, right, width = RAWBT_COLUMNS) => {
+  const cleanLeft = rawText(left)
+  const cleanRight = rawText(right)
+  if (cleanLeft.length + cleanRight.length + 1 <= width) return [`${cleanLeft}${' '.repeat(width - cleanLeft.length - cleanRight.length)}${cleanRight}`]
+  return [...wrapRawText(cleanLeft, width), cleanRight.padStart(width)]
+}
+
+const buildRawBtReceipt = order => {
+  const bytes = []
+  const encoder = new TextEncoder()
+  const command = (...values) => bytes.push(...values)
+  const line = value => { bytes.push(...encoder.encode(rawText(value)), 0x0a) }
+  const wrapped = value => wrapRawText(value).forEach(line)
+  const pair = (left, right) => rawPair(left, right).forEach(line)
+  const divider = value => line(value.repeat(RAWBT_COLUMNS))
+  const align = value => command(0x1b, 0x61, value)
+  const bold = value => command(0x1b, 0x45, value)
+  const size = value => command(0x1d, 0x21, value)
+
+  command(0x1b, 0x40)
+  align(1)
+  bold(1)
+  size(0x11)
+  line('BISTRO')
+  size(0)
+  line('HAMBURGUERIA')
+  divider('=')
+  line('COMANDA DE PEDIDO')
+  divider('=')
+  line('PEDIDO')
+  size(0x11)
+  line(`#${order.number}`)
+  size(0)
+  bold(0)
+  line(formatDateTime(order.createdAt))
+  align(0)
+  divider('-')
+  bold(1)
+  line('CLIENTE')
+  bold(0)
+  wrapped(order.customer.name)
+  wrapped(order.customer.phone)
+  divider('-')
+  bold(1)
+  line('ITENS DO PEDIDO')
+  bold(0)
+  order.items.forEach(item => {
+    pair(`${item.quantity}x ${item.name}`, rawMoney(item.total))
+    if (item.note) wrapped(`Obs.: ${item.note}`)
+  })
+  if (order.orderNote) {
+    divider('-')
+    bold(1)
+    line('ATENCAO, OBSERVACAO')
+    bold(0)
+    wrapped(order.orderNote)
+  }
+  divider('-')
+  pair('Subtotal', rawMoney(order.subtotal))
+  if (order.deliveryFee) pair('Entrega', rawMoney(order.deliveryFee))
+  divider('=')
+  bold(1)
+  pair('TOTAL', rawMoney(order.total))
+  bold(0)
+  divider('=')
+  bold(1)
+  line(order.fulfillment === 'delivery' ? 'ENTREGA' : 'RETIRADA')
+  bold(0)
+  if (order.fulfillment === 'delivery') {
+    wrapped(`${order.address.street}, ${order.address.number}${order.address.complement ? ` - ${order.address.complement}` : ''}`)
+    wrapped(order.address.neighborhood)
+    wrapped(`CEP ${order.address.cep}`)
+    if (order.address.reference) wrapped(`Ref.: ${order.address.reference}`)
+  } else wrapped(state.settings.address)
+  divider('-')
+  bold(1)
+  wrapped(`PAGAMENTO: ${paymentLabels[order.payment.method]}`)
+  bold(0)
+  if (order.payment.method === 'cash') {
+    wrapped(`Receber: ${order.payment.noChange ? 'valor exato' : rawMoney(order.payment.cashAmount)}`)
+    wrapped(`Troco: ${rawMoney(order.payment.change)}`)
+  }
+  if (['credit', 'debit'].includes(order.payment.method)) {
+    align(1)
+    bold(1)
+    line('LEVAR MAQUININHA')
+    bold(0)
+    align(0)
+  }
+  if (order.payment.method === 'pix') {
+    align(1)
+    bold(1)
+    line('CONFIRMAR COMPROVANTE')
+    bold(0)
+    align(0)
+  }
+  divider('-')
+  align(1)
+  line('Conferido por: ______________')
+  line('')
+  line('')
+  line('')
+  command(0x1b, 0x64, 0x03)
+  return new Uint8Array(bytes)
+}
+
+const printWithRawBt = order => {
+  const receipt = buildRawBtReceipt(order)
+  const base64 = btoa(String.fromCharCode(...receipt))
+  window.location.href = `rawbt:base64,${base64}`
+}
+
 const renderDashboard = () => {
   const activeOrders = state.orders.filter(order => !['completed', 'cancelled'].includes(order.status))
   const filtered = state.filter === 'all' ? state.orders : state.filter === 'active' ? activeOrders : state.orders.filter(order => order.status === state.filter)
@@ -115,6 +258,11 @@ const enablePush = async () => {
 
 const printOrder = order => {
   if (!order) return
+  if (/Android/i.test(navigator.userAgent)) {
+    document.body.classList.remove('printing')
+    try { printWithRawBt(order) } catch { alert('Não foi possível enviar a comanda ao RawBT. Confirme se o aplicativo está instalado e configurado.') }
+    return
+  }
   const template = document.createElement('template')
   template.innerHTML = printArea(order).trim()
   const nextSheet = template.content.firstElementChild
