@@ -48,7 +48,7 @@ const showToast = message => {
 }
 
 const productCard = product => `
-  <article class="product-card ${product.id === 4 ? 'promo-product' : ''}">
+  <article class="product-card ${product.id === 10 ? 'promo-product' : ''}">
     <button class="product-image" data-open-product="${product.id}" aria-label="Ver ${product.name}">
       <img src="${product.image}" alt="${product.name}" loading="lazy" />
       <span class="product-tag">${product.tag}</span>
@@ -167,12 +167,13 @@ const deliveryNoticeModal = () => !state.deliveryNotice ? '' : `<div class="moda
 
 const render = () => {
   const featured = menu.find(item => item.id === 4)
+  const highlighted = menu.find(item => item.id === 10)
   const isOpen = acceptingOrders()
   document.querySelector('#app').innerHTML = `
-    <div class="promo-bar"><span>🔥</span> Combo Barão Vermelho por ${money(featured.price)} <span>🔥</span></div>
+    <div class="promo-bar"><span>🔥</span> Combo Big Tasty para 3 por ${money(highlighted.price)} <span>🔥</span></div>
     <header class="site-header"><a class="brand" href="#top"><span class="brand-symbol"><i></i><b>B</b></span><span class="brand-copy"><strong>Bistrô</strong><small>BURGER</small></span></a><div class="header-actions"><button class="location-button" data-open-profile>${icon('pin', 18)}<span><small>Entregar para</small><strong>${state.profile.name ? escapeHtml(state.profile.name.split(' ')[0]) : 'Cadastrar endereço'}</strong></span>${icon('chevron', 15)}</button><button class="user-button" data-open-profile aria-label="Meus dados">${icon('user')}</button><button class="cart-button" data-open-cart>${icon('bag')}<span>Meu pedido</span>${cartQuantity() ? `<b>${cartQuantity()}</b>` : ''}</button></div></header>
     <main id="top">
-      <section class="hero hero-new shell"><div class="hero-copy"><span class="hero-kicker"><i></i> BISTRÔ BURGER · COZINHA ARTESANAL</span><h1>Hambúrguer<br />de verdade.</h1><p>Suculento, feito na hora e preparado para transformar sua fome em um momento especial.</p><div class="hero-actions"><button class="primary-button hero-button" data-scroll-menu>Quero pedir ${icon('arrow')}</button><div class="hero-rating"><span>${icon('star', 17)} 4.9</span><small>feito com carinho</small></div></div></div><div class="hero-photo"><img src="/Destaque.jpeg" alt="Penélope Charmosa da Bistrô Burger" /><div class="floating-card"><span>Oferta da casa</span><strong>Penélope<br />Charmosa</strong><small>por ${money(34.9)}</small></div></div></section>
+      <section class="hero hero-new shell"><div class="hero-copy"><span class="hero-kicker"><i></i> BISTRÔ BURGER · OFERTA PARA COMPARTILHAR</span><h1>Três burgers.<br />Uma oferta gigante.</h1><p>Big Tasty Original, Bacon e Duplo, com fritas, molho e Guaraná Antarctica 600 ml para até três pessoas.</p><div class="hero-actions"><button class="primary-button hero-button" data-quick-add="10" ${isOpen ? '' : 'disabled'}>${isOpen ? `Quero este combo ${icon('arrow')}` : 'Disponível no horário de atendimento'}</button><div class="hero-rating"><span>${icon('star', 17)} ${money(highlighted.price)}</span><small>serve até 3 pessoas</small></div></div></div><div class="hero-photo"><img src="${highlighted.image}" alt="${highlighted.name}" /><div class="floating-card"><span>Promoção imperdível</span><strong>Combo Big Tasty<br />para 3 pessoas</strong><small>de ${money(highlighted.oldPrice)} por ${money(highlighted.price)}</small></div></div></section>
       <section class="store-strip shell"><div class="store-status"><span class="status-dot ${isOpen ? '' : 'closed'}"></span><span><strong>${isOpen ? 'Aberto agora' : 'Fechado agora'}</strong><small>${isOpen ? 'Pedidos liberados' : 'Qua. a dom. · a partir das 18h'}</small></span></div><div>${icon('clock')}<span><small>Horário</small><strong>Qua. a dom. · 18h às 23h59</strong></span></div><div>${icon('pin')}<span><small>Taxa de entrega</small><strong>${money(state.settings.deliveryFee)}</strong></span></div><div>${icon('star')}<span><small>Pedido mínimo</small><strong>${money(state.settings.minimumOrder)}</strong></span></div></section>
       ${trackingBanner()}
       <section class="featured-offer shell"><div class="featured-image"><img src="/Promocao_Barao_Vermelho.jpeg" alt="Combo Barão Vermelho" /></div><div class="featured-copy"><span class="deal-pill">🔥 OFERTA ESPECIAL</span><h2>Uma caixa.<br />Muita felicidade.</h2><p>${featured.description}</p><div class="featured-price"><small>combo completo</small><strong>${money(featured.price)}</strong></div><button class="primary-button" data-quick-add="4" ${isOpen ? '' : 'disabled'}>${isOpen ? `Adicionar ao pedido ${icon('plus')}` : 'Disponível no horário de atendimento'}</button></div></section>

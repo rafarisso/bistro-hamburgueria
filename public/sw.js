@@ -1,4 +1,4 @@
-const CACHE = 'bistro-v9'
+const CACHE = 'bistro-v10'
 const APP_SHELL = ['/', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png', '/Destaque.jpeg', '/Promocao_Barao_Vermelho.jpeg', '/Abacaxi_ao_mel.jpeg', '/Combo_Cheese_Tudo.jfif', '/Combo_Big_Tasty_3_Pessoas.jpeg', '/Combo_Duplo_Cheddar_Chelsea.jpeg', '/Doritos_Burger.jpeg', '/Combo_Super_4_Familia.jpeg']
 
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())))

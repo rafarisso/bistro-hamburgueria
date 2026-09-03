@@ -49,3 +49,13 @@
 - Compactadas a logomarca, a coluna de preços e a área de totais sem retirar informações da comanda.
 - Ampliada a verificação automatizada para proteger as novas medidas de impressão.
 - Atualizado o cache do aplicativo para a versão 9 para entregar a calibração aos celulares já instalados.
+
+## 3 de setembro de 2026, quarta atualização
+
+### Novo destaque principal
+
+- Definido o Combo Big Tasty para 3 Pessoas como o destaque principal do aplicativo.
+- Atualizadas a faixa promocional, a fotografia, a chamada, a descrição e o preço exibidos na abertura do cardápio.
+- O botão do destaque agora adiciona diretamente o Combo Big Tasty ao pedido.
+- Destacado o cartão do produto no cardápio.
+- Atualizado o cache do aplicativo para a versão 10.
