@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "netlify dev",
     "build": "vite build",
     "preview": "vite preview",
     "check:print": "node scripts/check-print-flow.mjs",
     "check:menu": "node scripts/check-menu-update.mjs",
-    "test": "npm run check:print && npm run check:menu && npm run build"
+    "check:release": "node scripts/check-release.mjs",
+    "verify:prod": "node scripts/verify-deploy.mjs",
+    "test": "npm run check:print && npm run check:menu && npm run build",
+    "deploy": "npm test && npm run check:release && netlify deploy --prod --dir dist --functions netlify/functions && npm run verify:prod",
+    "deploy:preview": "npm test && netlify deploy --dir dist --functions netlify/functions"
   },
   "devDependencies": {
     "@netlify/functions": "^6.0.0",

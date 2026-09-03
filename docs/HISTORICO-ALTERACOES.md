@@ -80,3 +80,18 @@
 - Identificado que o texto já formatado passava uma segunda vez pela limpeza de espaços, o que desfazia o preenchimento calculado para alinhar os preços na margem direita.
 - Separada a limpeza de caracteres da compactação de espaços, preservando o alinhamento montado para itens, subtotal, entrega e total.
 - Ampliada a verificação automatizada para impedir o retorno da limpeza duplicada.
+
+## 3 de setembro de 2026, sexta atualização
+
+### Ciclo de publicação
+
+- Identificado que a correção da impressão havia sido construída e enviada ao GitHub, mas publicada como preview. A produção seguiu servindo a versão anterior, com o cliente reclamando de um problema já resolvido no repositório.
+- Removida a configuração duplicada da Netlify que existia na pasta acima do repositório, fora do controle de versão. Publicar de uma pasta ou da outra produzia configurações diferentes.
+- Ancorado o vínculo do projeto da Netlify dentro do repositório. Rodar a Netlify da pasta de cima agora falha avisando que não há projeto vinculado, em vez de publicar a coisa errada.
+- Criado o comando único `npm run deploy`, que verifica, constrói, publica em produção e confere o resultado.
+- Criado o portão `check-release`, que recusa publicar fora de `main`, com alterações sem commit, com commits não enviados ao GitHub ou sem a renovação do cache quando o aplicativo muda.
+- Criada a conferência `verify-deploy`, que baixa a produção e confirma o pacote publicado, a versão do cache, a presença da impressão RawBT, o painel no ar e a proteção da api de pedidos.
+- Criado `npm run deploy:preview` para validar impressão no celular sem tocar na produção.
+- Reescrito o guia de impressão, que ainda descrevia o fluxo de impressão de página abandonado no Android.
+- Criado o guia de publicação, com o passo a passo para ligar a publicação automática pelo GitHub.
+- Criados o README do projeto e as orientações para agentes.
