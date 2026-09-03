@@ -24,7 +24,9 @@ const printCallIndex = admin.indexOf('window.print()', printingClassIndex)
 assert.ok(printingClassIndex >= 0 && printCallIndex > printingClassIndex, 'A comanda precisa estar pronta antes da impressão direta.')
 
 assert.match(styles, /@page \{ size: 58mm auto; margin: 0; \}/, 'A página deve usar o padrão térmico de 58 mm.')
-assert.match(styles, /width: 42mm; max-width: 42mm;/, 'A comanda deve usar a largura segura de 42 mm para o driver Bluetooth.')
+assert.match(styles, /width: 40mm !important; min-width: 40mm !important; max-width: 40mm !important;/, 'O documento deve respeitar a largura segura do driver Bluetooth.')
+assert.match(styles, /width: 38mm; max-width: 38mm; margin: 0;/, 'A comanda deve usar 38 mm e iniciar na origem para evitar o corte lateral.')
+assert.match(styles, /padding: 1\.5mm 1mm 4mm 0;/, 'A comanda deve reservar uma margem interna no lado direito.')
 assert.match(styles, /body\.printing > #app \{ display: none !important; \}/, 'O aplicativo deve ficar oculto durante a impressão da comanda.')
 
 for (const relativePath of filesWithoutDashes) {

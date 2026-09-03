@@ -37,3 +37,15 @@
 - Removida a limpeza pelo evento `afterprint`, que pode ocorrer cedo demais em navegadores móveis.
 - Mantida uma única ação identificada como `Imprimir comanda`.
 - Preservado o acionamento direto dentro do toque do usuário.
+
+## 3 de setembro de 2026, terceira atualização
+
+### Calibração física da impressora Bluetooth
+
+- Confirmado que a prévia estava correta, mas a impressão física ainda cortava o lado direito.
+- Limitado o documento de impressão a 40 mm para evitar o deslocamento aplicado pelo serviço de impressão do celular.
+- Reduzida a área da comanda para 38 mm e alinhado o conteúdo na borda inicial da página.
+- Adicionada uma reserva interna de 1 mm no lado direito.
+- Compactadas a logomarca, a coluna de preços e a área de totais sem retirar informações da comanda.
+- Ampliada a verificação automatizada para proteger as novas medidas de impressão.
+- Atualizado o cache do aplicativo para a versão 9 para entregar a calibração aos celulares já instalados.
