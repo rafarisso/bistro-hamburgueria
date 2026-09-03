@@ -72,3 +72,11 @@
 - Aplicados alinhamento, negrito e destaque do número do pedido diretamente pela impressora.
 - Mantida a impressão HTML apenas como contingência para computadores.
 - Atualizado o cache do aplicativo para a versão 11.
+
+## 3 de setembro de 2026, sexta atualização
+
+### Alinhamento da coluna de preços na comanda ESC POS
+
+- Identificado que o texto já formatado passava uma segunda vez pela limpeza de espaços, o que desfazia o preenchimento calculado para alinhar os preços na margem direita.
+- Separada a limpeza de caracteres da compactação de espaços, preservando o alinhamento montado para itens, subtotal, entrega e total.
+- Ampliada a verificação automatizada para impedir o retorno da limpeza duplicada.

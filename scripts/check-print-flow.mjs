@@ -23,6 +23,7 @@ assert.match(admin, /const RAWBT_COLUMNS = 32/, 'A impressÃ£o direta deve resp
 assert.match(admin, /rawbt:base64,\$\{base64\}/, 'O painel deve enviar comandos ESC POS diretamente ao RawBT.')
 assert.match(admin, /command\(0x1b, 0x40\)/, 'A comanda deve inicializar a impressora antes de enviar o conteÃºdo.')
 assert.match(admin, /pair\('TOTAL', rawMoney\(order\.total\)\)/, 'O total deve ser formatado dentro da largura real da impressora.')
+assert.match(admin, /encoder\.encode\(rawAscii\(value\)/, 'A linha enviada a impressora nao pode colapsar espacos de novo, sob pena de perder o alinhamento da coluna de precos.')
 
 const rawBtIndex = admin.indexOf("if (/Android/i.test(navigator.userAgent))")
 const htmlFallbackIndex = admin.indexOf("document.createElement('template')", rawBtIndex)

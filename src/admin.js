@@ -57,12 +57,12 @@ const printArea = order => {
 }
 
 const RAWBT_COLUMNS = 32
-const rawText = value => String(value ?? '')
+const rawAscii = value => String(value ?? '')
   .normalize('NFD')
   .replace(/\p{Diacritic}/gu, '')
   .replace(/[^\x20-\x7E]/g, ' ')
-  .replace(/\s+/g, ' ')
-  .trim()
+
+const rawText = value => rawAscii(value).replace(/\s+/g, ' ').trim()
 
 const rawMoney = value => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
 
@@ -98,7 +98,7 @@ const buildRawBtReceipt = order => {
   const bytes = []
   const encoder = new TextEncoder()
   const command = (...values) => bytes.push(...values)
-  const line = value => { bytes.push(...encoder.encode(rawText(value)), 0x0a) }
+  const line = value => { bytes.push(...encoder.encode(rawAscii(value).replace(/[ ]+$/, '')), 0x0a) }
   const wrapped = value => wrapRawText(value).forEach(line)
   const pair = (left, right) => rawPair(left, right).forEach(line)
   const divider = value => line(value.repeat(RAWBT_COLUMNS))
