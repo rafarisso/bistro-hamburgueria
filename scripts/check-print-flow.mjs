@@ -15,15 +15,17 @@ const filesWithoutDashes = [
 ]
 
 assert.match(admin, /class="print-button" data-print=/, 'O painel deve oferecer uma única ação clara de impressão.')
-assert.match(admin, /window\.addEventListener\('afterprint', cleanup, \{ once: true \}\)/, 'A impressão deve limpar o estado ao terminar.')
+assert.doesNotMatch(admin, /afterprint/, 'A comanda não pode ser removida antes de o driver móvel terminar a impressão.')
 assert.doesNotMatch(admin, /setTimeout\([\s\S]{0,180}window\.print/, 'A chamada de impressão não pode ser adiada no celular.')
+assert.match(admin, /document\.body\.append\(nextSheet\)/, 'A comanda deve ser anexada diretamente ao corpo da página.')
 
 const printingClassIndex = admin.indexOf("document.body.classList.add('printing')")
 const printCallIndex = admin.indexOf('window.print()', printingClassIndex)
 assert.ok(printingClassIndex >= 0 && printCallIndex > printingClassIndex, 'A comanda precisa estar pronta antes da impressão direta.')
 
 assert.match(styles, /@page \{ size: 58mm auto; margin: 0; \}/, 'A página deve usar o padrão térmico de 58 mm.')
-assert.match(styles, /width: 48mm; max-width: 48mm;/, 'A comanda deve respeitar a largura útil de 48 mm.')
+assert.match(styles, /width: 42mm; max-width: 42mm;/, 'A comanda deve usar a largura segura de 42 mm para o driver Bluetooth.')
+assert.match(styles, /body\.printing > #app \{ display: none !important; \}/, 'O aplicativo deve ficar oculto durante a impressão da comanda.')
 
 for (const relativePath of filesWithoutDashes) {
   const source = await readFile(resolve(root, relativePath), 'utf8')

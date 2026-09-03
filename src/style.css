@@ -566,14 +566,13 @@ body.admin-page { color: #201c19; background: #eee9e2; }
 }
 
 @media print {
-  /* Bobina de 58 mm com largura útil padrão de 48 mm. */
+  /* Bobina de 58 mm com margem adicional para drivers Bluetooth móveis. */
   @page { size: 58mm auto; margin: 0; }
-  html, body { width: 58mm !important; min-width: 58mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  body.printing > #app, body.printing > #app > .admin-shell { width: 58mm !important; min-width: 58mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  body.printing > #app > .admin-shell > *:not(#thermal-print) { display: none !important; }
-  body.printing #thermal-print { display: block; position: relative; left: 0; width: 48mm; max-width: 48mm; margin: 0 auto; padding: 1.5mm 0 4mm; overflow: hidden; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 8pt; font-weight: 500; line-height: 1.25; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  html, body { width: 58mm !important; min-width: 58mm !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: #fff !important; }
+  body.printing > #app { display: none !important; }
+  body.printing > #thermal-print { display: block !important; position: relative; left: 0; width: 42mm; max-width: 42mm; margin: 0 0 0 2mm; padding: 1.5mm 0 4mm; overflow: visible; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 7.5pt; font-weight: 500; line-height: 1.24; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   #thermal-print, #thermal-print * { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
-  .print-logo { display: block; width: 41mm; height: auto; margin: 0 auto 1.5mm; color: #000; }
+  .print-logo { display: block; width: 36mm; height: auto; margin: 0 auto 1.5mm; color: #000; }
   .print-kitchen-label { padding: 1.5mm 0; border-top: .35mm solid #000; border-bottom: .35mm solid #000; font-size: 8pt; font-weight: 900; letter-spacing: .15mm; text-align: center; }
   .print-order { display: grid; gap: .5mm; padding: 2mm 0; border-bottom: .3mm dashed #000; text-align: center; }
   .print-order > span { font-size: 7pt; font-weight: 800; letter-spacing: .3mm; }
@@ -583,7 +582,7 @@ body.admin-page { color: #201c19; background: #eee9e2; }
   .print-customer > b, .print-delivery > b, .print-payment > b { font-size: 8pt; }
   .print-section-title { padding-top: 2mm; font-size: 8pt; font-weight: 900; }
   #thermal-print ul { display: grid; gap: 1.8mm; margin: 0; padding: 1.5mm 0 2mm; border-bottom: .3mm dashed #000; list-style: none; }
-  #thermal-print li { display: grid; grid-template-columns: 5mm minmax(0, 1fr) 14mm; align-items: start; gap: .8mm; break-inside: avoid; page-break-inside: avoid; }
+  #thermal-print li { display: grid; grid-template-columns: 4mm minmax(0, 1fr) 13mm; align-items: start; gap: .7mm; break-inside: avoid; page-break-inside: avoid; }
   #thermal-print li > b { font-size: 8pt; }
   #thermal-print li > span { display: grid; min-width: 0; font-size: 8pt; font-weight: 700; }
   #thermal-print li small { margin-top: .7mm; font-size: 6.5pt; line-height: 1.2; }

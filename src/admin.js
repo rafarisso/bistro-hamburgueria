@@ -7,7 +7,7 @@ const paymentLabels = { pix: 'Pix', cash: 'Dinheiro', debit: 'Débito', credit: 
 
 const state = {
   token: sessionStorage.getItem(TOKEN_KEY) || '', orders: [], settings: { ...defaultSettings },
-  loading: false, error: '', filter: 'active', settingsOpen: false, printOrder: null, lastOrderId: null, hasLoadedOrders: false,
+  loading: false, error: '', filter: 'active', settingsOpen: false, lastOrderId: null, hasLoadedOrders: false,
 }
 
 const api = async (url, options = {}) => {
@@ -49,9 +49,7 @@ const printLogo = () => `<svg class="print-logo" viewBox="0 0 420 132" role="img
   <text x="142" y="61" fill="currentColor" font-family="Arial, sans-serif" font-size="50" font-weight="900">BISTRÔ</text><text x="142" y="102" fill="currentColor" font-family="Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="1">HAMBURGUERIA</text>
 </svg>`
 
-const printArea = () => {
-  if (!state.printOrder) return ''
-  const order = state.printOrder
+const printArea = order => {
   const deliveryAddress = order.fulfillment === 'delivery'
     ? `<span>${escapeHtml(order.address.street)}, ${escapeHtml(order.address.number)}${order.address.complement ? ` - ${escapeHtml(order.address.complement)}` : ''}</span><span>${escapeHtml(order.address.neighborhood)}</span><span>CEP ${escapeHtml(order.address.cep)}</span>${order.address.reference ? `<span>Ref.: ${escapeHtml(order.address.reference)}</span>` : ''}`
     : `<span>${escapeHtml(state.settings.address)}</span>`
@@ -67,7 +65,7 @@ const renderDashboard = () => {
       <div class="admin-stats"><div><span>🔥</span><small>Pedidos ativos</small><strong>${activeOrders.length}</strong></div><div><span>👨‍🍳</span><small>Em preparo</small><strong>${state.orders.filter(order => order.status === 'preparing').length}</strong></div><div><span>💰</span><small>Vendas de hoje</small><strong>${money(todayTotal)}</strong></div><div><span>🍔</span><small>Total de pedidos</small><strong>${state.orders.length}</strong></div></div>
       <nav class="admin-filters"><button class="${state.filter === 'active' ? 'active' : ''}" data-filter="active">Ativos</button><button class="${state.filter === 'new' ? 'active' : ''}" data-filter="new">Novos</button><button class="${state.filter === 'preparing' ? 'active' : ''}" data-filter="preparing">Em preparo</button><button class="${state.filter === 'ready' ? 'active' : ''}" data-filter="ready">Prontos</button><button class="${state.filter === 'out_for_delivery' ? 'active' : ''}" data-filter="out_for_delivery">Em entrega</button><button class="${state.filter === 'all' ? 'active' : ''}" data-filter="all">Todos</button></nav>
       ${state.loading ? '<div class="admin-empty">Carregando pedidos...</div>' : state.error ? `<div class="admin-error big">${escapeHtml(state.error)}</div>` : filtered.length ? `<div class="admin-orders-grid">${filtered.map(orderCard).join('')}</div>` : '<div class="admin-empty"><span>👨‍🍳</span><h2>Nenhum pedido por aqui</h2><p>Os novos pedidos aparecerão automaticamente.</p></div>'}
-    </section>${settingsModal()}${printArea()}</main>`
+    </section>${settingsModal()}</main>`
 }
 
 const render = () => {
@@ -117,20 +115,16 @@ const enablePush = async () => {
 
 const printOrder = order => {
   if (!order) return
-
-  const cleanup = () => {
-    document.body.classList.remove('printing')
-    state.printOrder = null
-    render()
-  }
-
-  state.printOrder = order
+  const template = document.createElement('template')
+  template.innerHTML = printArea(order).trim()
+  const nextSheet = template.content.firstElementChild
+  const previousSheet = document.querySelector('#thermal-print')
+  if (previousSheet) previousSheet.replaceWith(nextSheet)
+  else document.body.append(nextSheet)
+  nextSheet.setAttribute('aria-hidden', 'true')
   document.body.classList.add('printing')
-  render()
-  window.addEventListener('afterprint', cleanup, { once: true })
-
-  // Precisa permanecer no mesmo gesto do toque para funcionar no celular.
-  window.print()
+  if (typeof window.print !== 'function') { alert('Abra o painel no Chrome e tente novamente.'); return }
+  try { window.print() } catch { alert('Não foi possível abrir a impressão. Use o menu do Chrome e escolha Imprimir.') }
 }
 
 const changeOrderStatus = async (id, status) => {
@@ -168,7 +162,7 @@ export const initAdmin = async () => {
   render()
   if (state.token) await loadOrders()
   navigator.serviceWorker?.addEventListener('message', event => { if (event.data?.type === 'NEW_ORDER' && state.token) loadOrders(true, false) })
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && state.token && !state.printOrder) loadOrders(true) })
-  window.addEventListener('focus', () => { if (state.token && !state.printOrder) loadOrders(true) })
-  setInterval(() => { if (state.token && !state.settingsOpen && !state.printOrder) loadOrders(true) }, POLL_INTERVAL)
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && state.token) loadOrders(true) })
+  window.addEventListener('focus', () => { if (state.token) loadOrders(true) })
+  setInterval(() => { if (state.token && !state.settingsOpen) loadOrders(true) }, POLL_INTERVAL)
 }

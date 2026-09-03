@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:print": "node scripts/check-print-flow.mjs",
-    "test": "npm run check:print && npm run build"
+    "check:menu": "node scripts/check-menu-update.mjs",
+    "test": "npm run check:print && npm run check:menu && npm run build"
   },
   "devDependencies": {
     "@netlify/functions": "^6.0.0",

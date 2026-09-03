@@ -8,6 +8,10 @@ export const catalog = [
   { id: 7, name: 'Abacaxi ao Mel + Combo', price: 48 },
   { id: 8, name: 'Cheese Tudo', price: 40 },
   { id: 9, name: 'Cheese Tudo + Combo', price: 58 },
+  { id: 10, name: 'Combo Big Tasty para 3 Pessoas', price: 59.9 },
+  { id: 11, name: 'Combo Duplo Cheddar e Chelsea', price: 59.9 },
+  { id: 12, name: 'Doritos Burger', price: 35.9 },
+  { id: 13, name: 'Combo Super 4 Família', price: 119.9 },
 ]
 
 export const defaultStoreSettings = {
