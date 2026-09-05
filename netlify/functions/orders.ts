@@ -5,6 +5,8 @@ import { verifyAdmin } from './_shared/auth.ts'
 import { catalog, defaultStoreSettings, isWithinOpeningHours, openingHours } from './_shared/catalog.ts'
 import { clean, currency, digits, json } from './_shared/http.ts'
 
+import { calculateCoupon } from '../../shared/coupons.js'
+
 const orderStore = () => getStore({ name: 'bistro-orders', consistency: 'strong' })
 const settingsStore = () => getStore({ name: 'bistro-settings', consistency: 'strong' })
 const pushStore = () => getStore({ name: 'bistro-push', consistency: 'strong' })
@@ -56,7 +58,7 @@ const formatWhatsApp = (order: any, settings: any) => {
     debit: '💳 *CARTÃO DE DÉBITO*\nMotoboy levará a maquininha',
     credit: '💳 *CARTÃO DE CRÉDITO*\nMotoboy levará a maquininha',
   }
-  return `🍔 *NOVO PEDIDO · BISTRÔ BURGER*\n━━━━━━━━━━\n🧾 *PEDIDO #${order.number}*\n🕐 ${new Date(order.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n👤 *CLIENTE*\n${order.customer.name}\n📱 ${order.customer.phone}\n\n${address}\n\n🛒 *ITENS*\n${items}${order.orderNote ? `\n\n💬 *OBS. GERAL*\n${order.orderNote}` : ''}\n\n💰 *VALORES*\nSubtotal: ${currency(order.subtotal)}\n${order.deliveryFee ? `Entrega: ${currency(order.deliveryFee)}\n` : ''}*TOTAL: ${currency(order.total)}*\n\n${payment[order.payment.method]}\n\n✅ _Confirme o recebimento deste pedido, por favor._`
+  return `🍔 *NOVO PEDIDO · BISTRÔ BURGER*\n━━━━━━━━━━\n🧾 *PEDIDO #${order.number}*\n🕐 ${new Date(order.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n👤 *CLIENTE*\n${order.customer.name}\n📱 ${order.customer.phone}\n\n${address}\n\n🛒 *ITENS*\n${items}${order.orderNote ? `\n\n💬 *OBS. GERAL*\n${order.orderNote}` : ''}\n\n💰 *VALORES*\nSubtotal: ${currency(order.subtotal)}\n${order.discount ? `Cupom ${order.couponCode}: -${currency(order.discount)}\n` : ''}${order.deliveryFee ? `Entrega: ${currency(order.deliveryFee)}\n` : ''}*TOTAL: ${currency(order.total)}*\n\n${payment[order.payment.method]}\n\n✅ _Confirme o recebimento deste pedido, por favor._`
 }
 
 const notifyAdmins = async (order: any) => {
@@ -116,7 +118,11 @@ const createOrder = async (request: Request, context: Context) => {
   const subtotal = Number(items.reduce((sum: number, item: any) => sum + item.total, 0).toFixed(2))
   if (subtotal < Number(settings.minimumOrder)) return json({ message: `O pedido mínimo é ${currency(Number(settings.minimumOrder))}.` }, 400)
   const deliveryFee = fulfillment === 'delivery' ? Number(settings.deliveryFee) : 0
-  const total = Number((subtotal + deliveryFee).toFixed(2))
+  let coupon
+  try { coupon = calculateCoupon(input.couponCode, subtotal) }
+  catch (error: any) { return json({ message: error.message }, 400) }
+  const { couponCode, discount } = coupon
+  const total = Number((subtotal - discount + deliveryFee).toFixed(2))
   const method = ['pix', 'cash', 'debit', 'credit'].includes(input.payment?.method) ? input.payment.method : ''
   if (!method || (method === 'pix' && !settings.pixKey)) return json({ message: 'Escolha uma forma de pagamento válida.' }, 400)
   const noChange = Boolean(input.payment?.noChange)
@@ -124,7 +130,7 @@ const createOrder = async (request: Request, context: Context) => {
   if (method === 'cash' && !noChange && (!cashAmount || cashAmount < total)) return json({ message: 'O valor em dinheiro precisa cobrir o total.' }, 400)
   const payment = { method, noChange, cashAmount, change: method === 'cash' && !noChange ? Number((cashAmount - total).toFixed(2)) : 0 }
   const now = new Date().toISOString(); const number = makeNumber(); const id = crypto.randomUUID(); const trackingToken = crypto.randomUUID().replace(/-/g, '')
-  const order = { id, number, trackingToken, createdAt: now, updatedAt: now, status: 'new', customer, fulfillment, address, items, orderNote: clean(input.orderNote, 200), subtotal, deliveryFee, total, payment }
+  const order = { id, number, trackingToken, createdAt: now, updatedAt: now, status: 'new', customer, fulfillment, address, items, orderNote: clean(input.orderNote, 200), subtotal, couponCode, discount, deliveryFee, total, payment }
   await orderStore().setJSON(`orders/${now}_${id}.json`, order)
   context.waitUntil(notifyAdmins(order))
   const message = formatWhatsApp(order, settings)

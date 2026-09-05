@@ -28,6 +28,16 @@ export const isWithinOpeningHours = (date = new Date()) => {
 }
 
 export const menu = [
+  { id: 16, name: 'Bistrô à Moda do Chef', category: 'Hambúrgueres',
+    description: 'Quatro carnes de 90 g, bacon e muito cheddar derretido em camadas. São 360 g de carne em um burger para quem leva a fome a sério.', price: 44.9, image: '/Bistro_Moda_do_Chef.jpeg',
+    tag: 'Novidade', serves: 'Serve 1 pessoa',
+    combo: { variantId: 17, price: 18, label: 'Batata frita + refrigerante 200 ml' },
+  },
+  { id: 14, name: 'Cheese Salada Duplo Bacon', category: 'Hambúrgueres',
+    description: 'Duas carnes, queijo derretido, bacon e salada fresca. Uma combinação generosa para matar a fome.', price: 34.9, image: '/Cheese_Salada_Duplo_Bacon.jpeg',
+    tag: 'Novidade', serves: 'Serve 1 pessoa',
+    combo: { variantId: 15, price: 18, label: 'Batata frita + refrigerante 200 ml' },
+  },
   {
     id: 5,
     name: 'Penélope Charmosa',

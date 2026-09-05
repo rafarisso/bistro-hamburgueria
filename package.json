@@ -12,9 +12,10 @@
     "check:menu": "node scripts/check-menu-update.mjs",
     "check:release": "node scripts/check-release.mjs",
     "verify:prod": "node scripts/verify-deploy.mjs",
-    "test": "npm run check:print && npm run check:menu && npm run build",
+    "test": "npm run check:print && npm run check:menu && npm run check:campaign && npm run build",
     "deploy": "npm test && npm run check:release && netlify deploy --prod --dir dist --functions netlify/functions && npm run verify:prod",
-    "deploy:preview": "npm test && netlify deploy --dir dist --functions netlify/functions"
+    "deploy:preview": "npm test && netlify deploy --dir dist --functions netlify/functions",
+    "check:campaign": "node scripts/check-campaign.mjs"
   },
   "devDependencies": {
     "@netlify/functions": "^6.0.0",

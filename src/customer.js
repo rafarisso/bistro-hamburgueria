@@ -3,6 +3,10 @@ import {
   isWithinOpeningHours, menu, money, onboardingSeen, OPENING_HOURS, saveCart, saveProfile, saveTracking,
 } from './state.js'
 
+import { calculateCoupon } from '../shared/coupons.js'
+import { selectHighlight } from './highlights.js'
+const highlighted = selectHighlight(menu)
+
 const icon = (name, size = 20) => {
   const paths = {
     bag: '<path d="M6 8V6a6 6 0 0 1 12 0v2M4 8h16l-1 13H5L4 8Z"/><path d="M9 11v1m6-1v1"/>',
@@ -127,9 +131,10 @@ const checkoutModal = () => {
           <div id="cash-details" class="payment-details hidden"><label class="cash-no-change"><input type="checkbox" name="noChange" /> Não preciso de troco</label><label>Vai pagar com quanto?<input name="cashAmount" inputmode="decimal" placeholder="Ex.: 100,00" /></label><div class="change-result">Troco: <strong id="change-value">R$ 0,00</strong></div></div>
           <div id="card-details" class="payment-details hidden"><span class="card-machine">💳 O motoboy levará a maquininha. Tenha o cartão em mãos.</span></div>
         </div>
+        <div class="checkout-section"><label>Cupom de desconto<input name="couponCode" maxlength="30" placeholder="Digite seu cupom" autocomplete="off" aria-describedby="coupon-feedback" /></label><small id="coupon-feedback" role="status">10% nos produtos. Não inclui entrega. Um cupom por pedido.</small></div>
         <label class="order-note">Observação geral<textarea name="orderNote" maxlength="200" placeholder="Alguma orientação para a entrega ou para o pedido?"></textarea></label>
         <input class="honey" name="website" tabindex="-1" autocomplete="off" />
-        <div class="checkout-summary"><div><span>Subtotal</span><strong>${money(subtotal())}</strong></div><div id="delivery-line"><span>Taxa de entrega</span><strong>${money(state.settings.deliveryFee)}</strong></div><div class="checkout-total"><span>Total</span><strong id="checkout-total">${money(subtotal() + state.settings.deliveryFee)}</strong></div></div>
+        <div class="checkout-summary"><div><span>Subtotal</span><strong>${money(subtotal())}</strong></div><div id="discount-line" class="hidden"><span>Desconto do cupom (10%)</span><strong id="discount-value"></strong></div><div id="delivery-line"><span>Taxa de entrega</span><strong>${money(state.settings.deliveryFee)}</strong></div><div class="checkout-total"><span>Total</span><strong id="checkout-total">${money(subtotal() + state.settings.deliveryFee)}</strong></div></div>
         <button class="primary-button confirm-order" type="submit" ${state.sending || !acceptingOrders() ? 'disabled' : ''}>${state.sending ? 'Enviando pedido...' : acceptingOrders() ? `Enviar pedido ${icon('whatsapp')}` : 'Pedidos indisponíveis agora'}</button><p class="secure-note">${icon('shield', 16)} Pedido enviado ao WhatsApp e ao painel da hamburgueria.</p>
       </form>
     </section></div>`
@@ -166,14 +171,15 @@ const trackingBanner = () => !state.tracking ? '' : `<section class="tracking-ba
 const deliveryNoticeModal = () => !state.deliveryNotice ? '' : `<div class="modal-layer delivery-notice-layer"><section class="delivery-notice-card" role="dialog" aria-modal="true"><div class="delivery-scooter">🛵</div><span class="eyebrow">PEDIDO A CAMINHO</span><h2>Seu pedido saiu<br />para entrega!</h2><p>Oi, ${escapeHtml(state.profile.name?.split(' ')[0] || 'cliente')}! O pedido <strong>#${escapeHtml(state.deliveryNotice.number)}</strong> já está com o entregador.</p><div class="delivery-attention"><b>👀 Fique atento ao entregador</b><span>Se possível, aguarde o contato ou fique próximo ao local de entrega. Assim agilizamos a entrega e seu lanche chega ainda mais quentinho.</span></div><p class="delivery-thanks">Muito obrigado pela preferência e pela confiança! 💛<br /><b>Bom apetite!</b></p><button class="primary-button" data-close-delivery-notice>Entendi, vou ficar atento</button></section></div>`
 
 const render = () => {
+  const previousForm = document.querySelector('#checkout-form')
+  const checkoutValues = previousForm ? Array.from(previousForm.elements).filter(el => el.name).map(el => ({ name: el.name, value: el.value, checked: el.checked, type: el.type })) : []
   const featured = menu.find(item => item.id === 4)
-  const highlighted = menu.find(item => item.id === 10)
   const isOpen = acceptingOrders()
   document.querySelector('#app').innerHTML = `
-    <div class="promo-bar"><span>🔥</span> Combo Big Tasty para 3 por ${money(highlighted.price)} <span>🔥</span></div>
+    <div class="promo-bar"><span>🔥</span> ${highlighted.name} por ${money(highlighted.price)} <span>🔥</span></div>
     <header class="site-header"><a class="brand" href="#top"><span class="brand-symbol"><i></i><b>B</b></span><span class="brand-copy"><strong>Bistrô</strong><small>BURGER</small></span></a><div class="header-actions"><button class="location-button" data-open-profile>${icon('pin', 18)}<span><small>Entregar para</small><strong>${state.profile.name ? escapeHtml(state.profile.name.split(' ')[0]) : 'Cadastrar endereço'}</strong></span>${icon('chevron', 15)}</button><button class="user-button" data-open-profile aria-label="Meus dados">${icon('user')}</button><button class="cart-button" data-open-cart>${icon('bag')}<span>Meu pedido</span>${cartQuantity() ? `<b>${cartQuantity()}</b>` : ''}</button></div></header>
     <main id="top">
-      <section class="hero hero-new shell"><div class="hero-copy"><span class="hero-kicker"><i></i> BISTRÔ BURGER · OFERTA PARA COMPARTILHAR</span><h1>Três burgers.<br />Uma oferta gigante.</h1><p>Big Tasty Original, Bacon e Duplo, com fritas, molho e Guaraná Antarctica 600 ml para até três pessoas.</p><div class="hero-actions"><button class="primary-button hero-button" data-quick-add="10" ${isOpen ? '' : 'disabled'}>${isOpen ? `Quero este combo ${icon('arrow')}` : 'Disponível no horário de atendimento'}</button><div class="hero-rating"><span>${icon('star', 17)} ${money(highlighted.price)}</span><small>serve até 3 pessoas</small></div></div></div><div class="hero-photo"><img src="${highlighted.image}" alt="${highlighted.name}" /><div class="floating-card"><span>Promoção imperdível</span><strong>Combo Big Tasty<br />para 3 pessoas</strong><small>de ${money(highlighted.oldPrice)} por ${money(highlighted.price)}</small></div></div></section>
+      <section class="hero hero-new shell"><div class="hero-copy"><span class="hero-kicker"><i></i> BISTRÔ BURGER · DESTAQUE DA VEZ</span><h1>${highlighted.name}</h1><p>${highlighted.description}</p><div class="hero-actions"><button class="primary-button hero-button" data-quick-add="${highlighted.id}" ${isOpen ? '' : 'disabled'}>${isOpen ? `Quero aproveitar ${icon('arrow')}` : 'Disponível no horário de atendimento'}</button><div class="hero-rating"><span>${icon('star', 17)} ${money(highlighted.price)}</span><small>${highlighted.serves}</small></div></div></div><div class="hero-photo"><img src="${highlighted.image}" alt="${highlighted.name}" /><div class="floating-card"><span>${highlighted.tag}</span><strong>${highlighted.name}</strong><small>${highlighted.oldPrice ? `de ${money(highlighted.oldPrice)} por ` : ''}${money(highlighted.price)}</small></div></div></section>
       <section class="store-strip shell"><div class="store-status"><span class="status-dot ${isOpen ? '' : 'closed'}"></span><span><strong>${isOpen ? 'Aberto agora' : 'Fechado agora'}</strong><small>${isOpen ? 'Pedidos liberados' : 'Qua. a dom. · a partir das 18h'}</small></span></div><div>${icon('clock')}<span><small>Horário</small><strong>Qua. a dom. · 18h às 23h59</strong></span></div><div>${icon('pin')}<span><small>Taxa de entrega</small><strong>${money(state.settings.deliveryFee)}</strong></span></div><div>${icon('star')}<span><small>Pedido mínimo</small><strong>${money(state.settings.minimumOrder)}</strong></span></div></section>
       ${trackingBanner()}
       <section class="featured-offer shell"><div class="featured-image"><img src="/Promocao_Barao_Vermelho.jpeg" alt="Combo Barão Vermelho" /></div><div class="featured-copy"><span class="deal-pill">🔥 OFERTA ESPECIAL</span><h2>Uma caixa.<br />Muita felicidade.</h2><p>${featured.description}</p><div class="featured-price"><small>combo completo</small><strong>${money(featured.price)}</strong></div><button class="primary-button" data-quick-add="4" ${isOpen ? '' : 'disabled'}>${isOpen ? `Adicionar ao pedido ${icon('plus')}` : 'Disponível no horário de atendimento'}</button></div></section>
@@ -185,6 +191,17 @@ const render = () => {
     ${cartDrawer()}${productModal()}${checkoutModal()}${onboardingModal()}${profileModal()}${successModal()}${deliveryNoticeModal()}<div class="toast ${state.toast ? 'show' : ''}" role="status">${escapeHtml(state.toast)}</div>`
   bodyLock()
   bindEvents()
+  const currentForm = document.querySelector('#checkout-form')
+  if (currentForm) {
+    for (const saved of checkoutValues) {
+      const elements = Array.from(currentForm.elements).filter(el => el.name === saved.name)
+      for (const el of elements) {
+        if (['radio', 'checkbox'].includes(saved.type)) { if (el.value === saved.value) el.checked = saved.checked }
+        else el.value = saved.value
+      }
+    }
+    updateCheckoutUI()
+  }
 }
 
 const addToCart = (product, quantity = 1, note = '') => {
@@ -264,7 +281,20 @@ const updateCheckoutUI = () => {
   document.querySelector('#pix-details')?.classList.toggle('hidden', payment !== 'pix')
   document.querySelector('#cash-details')?.classList.toggle('hidden', payment !== 'cash')
   document.querySelector('#card-details')?.classList.toggle('hidden', !['debit', 'credit'].includes(payment))
-  const total = subtotal() + (delivery ? state.settings.deliveryFee : 0)
+  let discount = 0
+  const couponInput = form.elements.couponCode
+  try {
+    const result = calculateCoupon(couponInput.value, subtotal())
+    discount = result.discount
+    couponInput.setCustomValidity('')
+    document.querySelector('#coupon-feedback').textContent = result.couponCode ? `${result.couponCode} aplicado: 10% nos produtos. Entrega não incluída.` : '10% nos produtos. Não inclui entrega. Um cupom por pedido.'
+  } catch (error) {
+    couponInput.setCustomValidity(error.message)
+    document.querySelector('#coupon-feedback').textContent = error.message
+  }
+  document.querySelector('#discount-line').classList.toggle('hidden', !discount)
+  document.querySelector('#discount-value').textContent = `- ${money(discount)}`
+  const total = subtotal() - discount + (delivery ? state.settings.deliveryFee : 0)
   document.querySelector('#checkout-total').textContent = money(total)
   const noChange = form.elements.noChange?.checked
   if (form.elements.cashAmount) form.elements.cashAmount.disabled = Boolean(noChange)
@@ -280,7 +310,8 @@ const submitOrder = async form => {
   const fulfillment = data.get('fulfillment')
   const paymentMethod = data.get('payment')
   const delivery = fulfillment === 'delivery'
-  const totalValue = subtotal() + (delivery ? state.settings.deliveryFee : 0)
+  const { discount, couponCode } = calculateCoupon(data.get('couponCode'), subtotal())
+  const totalValue = subtotal() - discount + (delivery ? state.settings.deliveryFee : 0)
   const cashAmount = Number(String(data.get('cashAmount') || '').replace(',', '.')) || 0
   if (paymentMethod === 'cash' && !data.get('noChange') && cashAmount < totalValue) { showToast('O valor em dinheiro precisa cobrir o total do pedido.'); return }
   if (subtotal() < state.settings.minimumOrder) { showToast(`O pedido mínimo é ${money(state.settings.minimumOrder)}.`); return }
@@ -288,7 +319,7 @@ const submitOrder = async form => {
   state.profile = { name: String(data.get('name')).trim(), phone: String(data.get('phone')).trim(), address }
   saveProfile(state.profile)
   const payload = {
-    customer: state.profile, fulfillment, address, orderNote: data.get('orderNote'), website: data.get('website'),
+    couponCode, customer: state.profile, fulfillment, address, orderNote: data.get('orderNote'), website: data.get('website'),
     payment: { method: paymentMethod, cashAmount: paymentMethod === 'cash' && !data.get('noChange') ? cashAmount : null, noChange: Boolean(data.get('noChange')) },
     items: state.cart.map(item => ({ id: item.id, quantity: item.quantity, note: item.note })),
   }

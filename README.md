@@ -31,3 +31,5 @@ Esta pasta é a raiz do repositório e também o ponto de partida de toda public
 ## Antes de mexer
 
 A impressão da comanda tem regras próprias, descritas em [docs/GUIA-IMPRESSAO-58MM.md](docs/GUIA-IMPRESSAO-58MM.md). O ciclo de publicação está em [docs/GUIA-DEPLOY.md](docs/GUIA-DEPLOY.md). As duas leituras evitam repetir problemas já resolvidos.
+
+Campanha de setembro: [regras, cupons e material impresso](docs/CAMPANHA-CUPONS.md).

@@ -1,4 +1,8 @@
 export const catalog = [
+  { id: 16, name: 'Bistrô à Moda do Chef', price: 44.9 },
+  { id: 17, name: 'Bistrô à Moda do Chef + Combo', price: 62.9 },
+  { id: 14, name: 'Cheese Salada Duplo Bacon', price: 34.9 },
+  { id: 15, name: 'Cheese Salada Duplo Bacon + Combo', price: 52.9 },
   { id: 1, name: 'Cheese Salada', price: 28 },
   { id: 2, name: 'Duplo Cheddar Bacon', price: 34 },
   { id: 3, name: 'Combo Bistrô', price: 42 },

@@ -95,3 +95,7 @@
 - Reescrito o guia de impressão, que ainda descrevia o fluxo de impressão de página abandonado no Android.
 - Criado o guia de publicação, com o passo a passo para ligar a publicação automática pelo GitHub.
 - Criados o README do projeto e as orientações para agentes.
+
+## 05/09/2026: novos lanches, cupons e destaques
+
+Incluídos Cheese Salada Duplo Bacon e Bistrô à Moda do Chef, com combos de + R$ 18. Criados BISTRO10 e VOLTE10, com validação no servidor e desconto na comanda. Destaque muda a cada carregamento sem repetição consecutiva. PDF A4 com oito bilhetes e QR Code, fonte reproduzível e testes de campanha. Cache v12. Regras e decisões em CAMPANHA-CUPONS.md; entrada para agentes em AGENTS.md.
