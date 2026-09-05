@@ -1,0 +1,50 @@
+# Publicacao de producao. Enviar para main publica; nao ha passo manual.
+# Alteracoes que nao chegam ao site publicado nao disparam deploy.
+name: Publicar em producao
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - 'output/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nunca duas publicacoes ao mesmo tempo; a fila espera em vez de cancelar,
+# para que nenhuma versao fique publicada pela metade.
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+env:
+  NETLIFY_SITE_ID: a96daea7-f00e-4a6f-ac8a-30486215c99d
+
+jobs:
+  publicar:
+    name: Verificar, publicar e conferir
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Verificacoes e build
+        run: npm test
+
+      - name: Portao de release
+        run: npm run check:release
+
+      - name: Publicar na Netlify
+        run: npx --yes netlify-cli@26 deploy --prod --dir dist --functions netlify/functions
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+      - name: Conferir a producao
+        run: npm run verify:prod

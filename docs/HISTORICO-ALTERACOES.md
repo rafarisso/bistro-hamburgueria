@@ -101,3 +101,15 @@
 Incluídos Cheese Salada Duplo Bacon e Bistrô à Moda do Chef, com combos de + R$ 18. Criados BISTRO10 e VOLTE10, com validação no servidor e desconto na comanda. Destaque muda a cada carregamento sem repetição consecutiva. PDF A4 com oito bilhetes e QR Code, fonte reproduzível e testes de campanha. Cache v12. Regras e decisões em CAMPANHA-CUPONS.md; entrada para agentes em AGENTS.md.
 
 Conferido e publicado no mesmo dia. O empacotamento da função de pedidos foi validado num preview antes da produção, porque `shared/coupons.js` fica fora de `netlify/functions` e um import não resolvido derrubaria a criação de pedidos. Acrescentada verificação dos campos que o destaque sorteado precisa, já que o hero passou a renderizá-los em tempo de execução e um produto novo sem `tag` ou `serves` apareceria como `undefined` na abertura.
+
+## 05/09/2026, segunda atualização: publicação automática
+
+- Ligada a publicação automática pelo GitHub Actions. Enviar para `main` roda as verificações, o portão de release, o deploy de produção e a conferência `verify:prod`. Os dois incidentes de deploy que preview desta semana deixam de ser possíveis por esquecimento.
+- Criado `.github/workflows/publicar.yml` para a `main` e `.github/workflows/verificacoes.yml` para os demais ramos e propostas de alteração.
+- Alterações em `docs/`, `output/` e arquivos `.md` não disparam publicação, por não chegarem ao site.
+- Publicações não correm em paralelo: a segunda espera a primeira, em vez de cancelá-la.
+- Token da Netlify gravado no segredo `NETLIFY_AUTH_TOKEN` do repositório. É um token de conta inteira, não apenas deste site; a troca está documentada no guia de publicação.
+- A integração nativa da Netlify com o GitHub permanece desligada de propósito, para não publicar por dois caminhos e para não perder a conferência pós-deploy.
+- `check-release` passou a distinguir integração contínua de máquina local. As garantias de branch, repositório limpo e sincronia com o GitHub valem por construção no Actions; a verificação da versão de cache continua valendo nos dois casos.
+- `AGENTS.md` passou a ser o arquivo canônico de instruções, e `CLAUDE.md` apenas aponta para ele. Duas cópias das mesmas regras divergem, e o projeto vem sendo trabalhado por ferramentas diferentes.
+- Reescritos o guia de publicação e o README para refletir que publicar agora é enviar para a `main`.

@@ -9,28 +9,42 @@ Isso já foi diferente. Havia um `netlify.toml` na pasta de cima, fora do contro
 ## Publicar
 
 ```
+git push
+```
+
+É isso. Enviar para `main` publica. O GitHub Actions executa a mesma sequência que era feita à mão:
+
+1. `npm ci`, com as versões exatas do `package-lock.json`.
+2. `npm test`: impressão térmica, cardápio, campanha e build.
+3. `check:release`, o portão descrito abaixo.
+4. `netlify deploy --prod`, com pasta e funções explícitas.
+5. `verify:prod`, que confere o que ficou realmente no ar.
+
+Se qualquer etapa falhar, a publicação não acontece e o commit aparece marcado no GitHub. Acompanhe em `github.com/rafarisso/bistro-hamburgueria/actions` ou por `gh run watch`.
+
+Alterações que não chegam ao site publicado, em `docs/`, `output/` e qualquer `.md`, não disparam deploy. Ramos que não são `main` e propostas de alteração rodam apenas as verificações, sem publicar.
+
+### Como a automação está montada
+
+`.github/workflows/publicar.yml` publica a `main`. `.github/workflows/verificacoes.yml` valida os demais ramos. O token fica no segredo `NETLIFY_AUTH_TOKEN` do repositório; o identificador do projeto está no próprio workflow, por não ser sigiloso. Duas publicações nunca correm juntas: a segunda espera a primeira terminar, em vez de cancelá-la.
+
+A integração nativa da Netlify com o GitHub está intencionalmente desligada. Se for ligada, o site passa a ser publicado por dois caminhos ao mesmo tempo, e o caminho da Netlify não executa `verify:prod`.
+
+## Publicar à mão
+
+O caminho manual continua disponível para quando o Actions estiver fora do ar:
+
+```
 npm run deploy
 ```
 
-Um comando só, sempre em produção. Ele executa nesta ordem:
-
-1. `check:print`, que protege as regras da comanda térmica.
-2. `check:menu`, que protege cardápio, preços, fotos e versão de cache.
-3. `build`, que gera `dist`.
-4. `check:release`, o portão descrito abaixo.
-5. `netlify deploy --prod`, com pasta e funções explícitas.
-6. `verify:prod`, que confere o que ficou realmente no ar.
-
-Se qualquer etapa falhar, a publicação não acontece.
+Faz exatamente o mesmo, da sua máquina. Evite usar logo após um `git push`, porque o Actions já estará publicando o mesmo conteúdo.
 
 ## O portão antes de publicar
 
-`scripts/check-release.mjs` recusa a publicação quando:
+`scripts/check-release.mjs` recusa a publicação quando o aplicativo mudou mas a versão do cache em `public/sw.js` continua a mesma, o que deixaria os celulares presos na versão anterior.
 
-- o branch não é `main`;
-- existem alterações sem commit, porque a produção precisa ser idêntica ao repositório;
-- existem commits que não foram enviados ao GitHub, ou o GitHub tem commits que você não possui;
-- o aplicativo mudou mas a versão do cache em `public/sw.js` continua a mesma, o que deixaria os celulares presos na versão anterior.
+Fora da integração contínua ele também recusa quando o branch não é `main`, quando existem alterações sem commit, ou quando o repositório local e o GitHub estão fora de sincronia. Na integração contínua essas garantias já valem por construção, porque o que se publica é o próprio repositório.
 
 ## A conferência depois de publicar
 
@@ -41,7 +55,7 @@ Se qualquer etapa falhar, a publicação não acontece.
 - o aplicativo no ar contém a impressão direta pelo RawBT e o alinhamento da coluna de preços;
 - o painel responde e a api de pedidos continua exigindo autenticação.
 
-Esse é o passo que faltava. Em 3 de setembro de 2026 a correção da impressão foi construída e enviada, mas saiu como preview: a produção seguiu servindo a versão anterior por horas, com o cliente reclamando de um problema que já estava corrigido no repositório. `verify:prod` torna esse silêncio impossível.
+Esse é o passo que faltava. Em 3 de setembro de 2026 a correção da impressão foi construída e enviada, mas saiu como preview: a produção seguiu servindo a versão anterior por horas, com o cliente reclamando de um problema que já estava corrigido no repositório. Em 5 de setembro a campanha de cupons repetiu o mesmo padrão, e dessa vez a conferência acusou na hora.
 
 ## Testar sem tocar na produção
 
@@ -51,6 +65,8 @@ npm run deploy:preview
 
 Gera um endereço temporário com o mesmo backend e o mesmo banco de pedidos. Serve para validar impressão no celular antes de publicar. Não exige repositório limpo, justamente porque existe para testar trabalho em andamento.
 
+Quando a mudança mexer em `netlify/functions/`, vale acrescentar `--skip-functions-cache` e conferir que `/api/orders` responde 401, e não 500. Um import que não resolve só aparece assim: a função quebra inteira e a hamburgueria para de receber pedidos.
+
 ## Conferir a produção a qualquer momento
 
 ```
@@ -59,14 +75,10 @@ npm run verify:prod
 
 Não publica nada. Compara o que está construído aqui com o que está no ar.
 
-## Ligar a publicação automática
+## Trocar o token
 
-Hoje todo deploy é manual. O projeto da Netlify não está conectado ao repositório do GitHub, e foi por isso que um `git push` não colocou nada no ar. Para conectar:
+O segredo `NETLIFY_AUTH_TOKEN` é um token pessoal da Netlify e dá acesso à conta inteira, não apenas a este site. Para substituí-lo, gere outro em `app.netlify.com/user/applications` e grave com:
 
-1. Abra `app.netlify.com/projects/bistrohamburgueria`.
-2. Vá em `Project configuration`, `Build & deploy`, `Continuous deployment`.
-3. Em `Build settings`, escolha `Link repository` e selecione `rafarisso/bistro-hamburgueria`.
-4. Defina `Base directory` vazio, `Build command` como `npm run build` e `Publish directory` como `dist`.
-5. Confirme que o branch de produção é `main`.
-
-Depois disso o push publica sozinho. Mesmo assim vale rodar `npm run verify:prod` após a publicação automática terminar.
+```
+gh secret set NETLIFY_AUTH_TOKEN -R rafarisso/bistro-hamburgueria
+```
