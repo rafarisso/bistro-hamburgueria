@@ -22,7 +22,7 @@ for (const product of products) {
   assert.ok((await stat(resolve(root, 'public', product.image))).size > 50_000, `A imagem de ${product.name} está ausente ou incompleta.`)
 }
 
-assert.match(customer, /src="\$\{highlighted\.image\}" alt="\$\{highlighted\.name\}"/, 'A foto principal deve pertencer ao Combo Big Tasty.')
+assert.match(customer, /src="\$\{highlighted\.image\}" alt="\$\{highlighted\.name\}"/, 'A foto principal deve pertencer ao destaque sorteado.')
 assert.match(serviceWorker, /const CACHE = 'bistro-v12'/, 'O cache precisa mudar para os celulares receberem o novo destaque e a impressão direta.')
 
 console.log('Cardápio atualizado: quatro novos produtos, preços, fotos e cache validados.')

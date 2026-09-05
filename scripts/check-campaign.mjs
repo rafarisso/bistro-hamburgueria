@@ -29,6 +29,12 @@ for (let i = 0; i < 30; i++) {
   assert.ok(selected.category === 'Promoções' || selected.oldPrice)
 }
 assert.ok(selectHighlight(menu, { getItem() { throw Error() }, setItem() { throw Error() } }))
+// O hero renderiza estes campos direto; um destaque incompleto vira 'undefined' na abertura do app.
+for (const item of menu.filter(product => product.category === 'Promoções' || product.oldPrice)) {
+  for (const campo of ['name', 'description', 'image', 'price', 'tag', 'serves']) {
+    assert.ok(item[campo], `O destaque ${item.name} nao tem ${campo} e apareceria incompleto na abertura do aplicativo.`)
+  }
+}
 // Exercita o processamento real do POST sem gravar pedidos ou notificar clientes.
 const source = await readFile(new URL('../netlify/functions/orders.ts', import.meta.url), 'utf8')
 const js = stripTypeScriptTypes(source.slice(0, source.indexOf('const trackOrder ='))).replace(/^import [^\r\n]*\r?\n/gm, '')
