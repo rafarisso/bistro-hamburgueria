@@ -99,3 +99,5 @@
 ## 05/09/2026: novos lanches, cupons e destaques
 
 Incluídos Cheese Salada Duplo Bacon e Bistrô à Moda do Chef, com combos de + R$ 18. Criados BISTRO10 e VOLTE10, com validação no servidor e desconto na comanda. Destaque muda a cada carregamento sem repetição consecutiva. PDF A4 com oito bilhetes e QR Code, fonte reproduzível e testes de campanha. Cache v12. Regras e decisões em CAMPANHA-CUPONS.md; entrada para agentes em AGENTS.md.
+
+Conferido e publicado no mesmo dia. O empacotamento da função de pedidos foi validado num preview antes da produção, porque `shared/coupons.js` fica fora de `netlify/functions` e um import não resolvido derrubaria a criação de pedidos. Acrescentada verificação dos campos que o destaque sorteado precisa, já que o hero passou a renderizá-los em tempo de execução e um produto novo sem `tag` ou `serves` apareceria como `undefined` na abertura.
